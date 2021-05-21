@@ -1,0 +1,39 @@
+// wires for fetch stage
+wire [2:0] mno ;
+wire [15:0] pcp1 ;
+wire [15:0] pci6_beq ;
+wire [15:0] rai9_jri ;
+wire [15:0] pci9_jal ;
+wire [15:0] pc_out ;
+wire [15:0] pc_f ;
+wire [15:0] instr_nop_f ; 
+wire [15:0] instr_out ; 	
+
+	assign pcp1 = pc_f + 16'b1;
+	assign pci6_beq = pc_exe + {10'b0, instr_exe[5:0]};
+	assign rai9_jri = ra_d + {7'b0, instr_d[8:0]} ; 
+	assign pci9_jal= pc_d+ {7'b0,instr_d[8:0]};
+	assign a =((instr_d[15:12]== 4'b1001) || (instr_d[15:12]== 4'b1011)|| (instr_d[15:12]== 4'b1010) || 
+								((instr_exe[15:12]==4'b1000) && (|alu_out == 1'b0))) ? 1'b1 : 1'b0 ;
+	
+	branch_controller bc1(.instr_exe_4(instr_exe[15:12]),.instr_decode_4(instr_d[15:12]),.alu_out(alu_out),.mno(mno));
+	
+	mux_pc mux_pc1(.next_pc_normal(pcp1),.next_pc_beq(pci6_beq),.next_pc_jri(rai9_jri),.next_pc_jal(pci9_jal),
+						.next_pc_jlr(rb_d),.mno(mno),.pc_out(pc_out));
+
+//pending0 i guess there will be a need to put enable = 0 for nop in decode 
+//otherwise it will increment by 1 from the desired pc
+	
+	prog_counter pc1(.pc_in(pc_out), .clk(clk), .en(e_bar), .clr(clr),.pc_f(pc_f)); 
+
+	instruction_memory im1(.address(pc_f), .instr_out(instr_out));
+	
+	assign instr_nop_f = 16'b0111000000000000 ; 
+	assign instr_f = a ? instr_nop_f : instr_out ; 
+	
+//pending1 BTA 
+//pending2 Short PC to R7 in decode stage 
+//pending3 store pc=1 in ra for link instrs	
+	
+	
+endmodule	
