@@ -7,8 +7,13 @@ wire [15:0] pci9_jal ;
 wire [15:0] pc_out ;
 wire [15:0] pc_f ;
 wire [15:0] instr_nop_f ; 
-wire [15:0] instr_out ; 	
+wire [15:0] instr_out ; 
 
+//wires for decode stage 
+
+	
+//************************************************************************************************************************//
+//Fetch Stage
 	assign pcp1 = pc_f + 16'b1;
 	assign pci6_beq = pc_exe + {10'b0, instr_exe[5:0]};
 	assign rai9_jri = ra_d + {7'b0, instr_d[8:0]} ; 
@@ -34,6 +39,23 @@ wire [15:0] instr_out ;
 //pending1 BTA 
 //pending2 Short PC to R7 in decode stage 
 //pending3 store pc=1 in ra for link instrs	
+//pending4 check if when rb is the frst src then selection happens kya bcz he has fixed instrs to specific read address ports
 	
 	
 endmodule	
+
+//************************************************************************************************************************//
+
+// IF - ID Pipeline Registers
+
+	reg_f2d reg_f2d_1(.clk(clk),.enable(e_bar), .clr(clr), .instr_f_16(instr_f), 
+	.pc_f_16(pc_f), .instr_d_16(instr_d), .pc_d_16(pc_d) ); 
+	
+//************************************************************************************************************************//
+//Decode Stage 
+
+	controller c1(.instr_decode_4(instr_d[15:12]),.cw_decode_8(cw_d)) ; 
+	
+	register_file rf1(.read_address_1(instr_d[8:6]),.read_address_2(instr_d[11:9]),.write_en(cw_wb[0]),.write_address()
+	,.write_data(),.current_pc(pc_d),.clk(clk),.data_1(reg_d1),.data_2(reg_d2),.data_112(data_112));
+//pending write data and write address 
